@@ -10,7 +10,6 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public int valueNow;
     public int posInStall;
     public float quality;
-    public ArrayList wantedCustomers;
 
     private ArrayList collisions;
     private bool isDown;
@@ -23,7 +22,6 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         collisions = new ArrayList();
         this.gameObject.GetComponent<Image>().sprite = item.itemImg;
         isDown = false;
-        wantedCustomers = new ArrayList();
     }
 
     // Update is called once per frame
@@ -64,7 +62,7 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             this.transform.position = Camera.main.ScreenToWorldPoint(dist);
             return;
         }
-        GameObject touchCustomer;
+        Customer touchCustomer;
         int nearlistIndex = -1;
         float minDistance = float.MaxValue;
         if (collisions.Count > 1) {
@@ -77,27 +75,13 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                     nearlistIndex = i;
                 }
             }
-            touchCustomer = ((Collider2D)collisions[nearlistIndex]).gameObject;
+            touchCustomer = ((Collider2D)collisions[nearlistIndex]).GetComponent<Customer>();
         } else {
-            touchCustomer = ((Collider2D)collisions[0]).gameObject;
+            touchCustomer = ((Collider2D)collisions[0]).GetComponent<Customer>();
         }
-        if (wantedCustomers.Contains(touchCustomer.GetComponent<Customer>()))
-        {
-            for (int i = 0; i < collisions.Count; i++)
-            {
-                if (((Collider2D)collisions[0]).GetComponent<Customer>() != touchCustomer.GetComponent<Customer>())
-                {
-                    ((Collider2D)collisions[0]).GetComponent<Customer>().ClearWanted();
-                }
-                else {
-                    GameObject.FindWithTag("GameController").GetComponent<GameController>().RemoveCustomer(touchCustomer.GetComponent<Customer>());
-                    GameObject.FindWithTag("GameController").GetComponent<GameController>().money += this.valueNow;
-                }
-            }
-            GameObject.FindWithTag("GameController").GetComponent<GameController>().RemoveItemInStall(this);
-        }
-        else {
-            this.transform.position = Camera.main.ScreenToWorldPoint(dist);
+        if (touchCustomer.item == item) {
+            GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().RemoveItemInStall(this);
+            GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().RemoveCustomer(touchCustomer);
         }
     }
 }

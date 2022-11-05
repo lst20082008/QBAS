@@ -10,8 +10,13 @@ public class GameController : MonoBehaviour
     public GameObject background;
     public Transform[] itemPos;
     public Transform[] customerPos;
+    public Transform newItemPos;
     public GameObject itemPrefab;
     public GameObject customerPrefab;
+    public GameObject newItemPrefab;
+    public Item[] items;
+    // <Item, ArrayList<Customer>>
+    public Hashtable wantedCusomer;
 
     /* test */
     public Item testItem;
@@ -19,12 +24,18 @@ public class GameController : MonoBehaviour
 
     public GameObject[] itemInstanceNow;
     public GameObject[] customerNow;
+    public bool isNewItemExisted;
 
     // Start is called before the first frame update
     void Start()
     {
         itemInstanceNow = new GameObject[9];
         customerNow = new GameObject[10];
+        wantedCusomer = new Hashtable();
+        isNewItemExisted = false;
+        for (int i = 0; i < items.Length; i++) {
+            wantedCusomer.Add(items[i], new ArrayList());
+        }
     }
 
     // Update is called once per frame
@@ -87,6 +98,14 @@ public class GameController : MonoBehaviour
             return;
         }
         itemInstanceNow[ii.posInStall] = null;
+        // if there is no this type of item
+        // notify all cm
+        if (!GetAllItemCategoty().Contains(ii.item)) {
+            for (int i = 0; i < ((ArrayList)wantedCusomer[ii.item]).Count; i++) {
+                ((Customer)((ArrayList)wantedCusomer[ii.item])[i]).ClearWanted();
+                i--;
+            }
+        }
         Destroy(ii.gameObject);
     }
 
@@ -103,53 +122,72 @@ public class GameController : MonoBehaviour
         if (thisCount == -1) {
             return false;
         }
-        // find how many items we have
-        int itemNum = 0;
-        for (int i = 0; i < 9; i++) {
-            if (itemInstanceNow[i] == null) {
-                continue;
-            }
-            itemNum++;
-        }
-        if (itemNum == 0) {
-            return false;
-        }
-        // rand choose one item
-        int wantedItem = Random.Range(1, itemNum);
-        int wantedItemIndex = -1;
-        for (int i = 0; i < 9; i++)
-        {
-            if (itemInstanceNow[i] == null)
-            {
-                continue;
-            }
-            wantedItem--;
-            if (wantedItem == 0) {
-                wantedItemIndex = i;
-            }
-        }
-        // generate customer
         GameObject thisInstance = Instantiate(customerPrefab, customerPos[thisCount].transform);
         thisInstance.transform.SetParent(background.transform);
         Customer cm = thisInstance.GetComponent<Customer>();
         cm.myPos = thisCount;
         cm.remainTime = Random.Range(20, 30);
-        // create link bewteen customer and item
-        cm.wantedItemPos = wantedItemIndex;
-        cm.transform.GetChild(0).GetComponent<Image>().sprite = itemInstanceNow[wantedItemIndex].GetComponent<ItemInstance>().item.itemImg;
-        itemInstanceNow[wantedItemIndex].GetComponent<ItemInstance>().wantedCustomers.Add(cm);
+        cm.ClearWanted();
+        ChooseOneType(cm);
         customerNow[thisCount] = thisInstance;
         return true;
     }
 
     public void RemoveCustomer(Customer cm)
     {
-        if (cm.wantedItemPos != -1) {
-            if (itemInstanceNow[cm.wantedItemPos]) {
-                itemInstanceNow[cm.wantedItemPos].GetComponent<ItemInstance>().wantedCustomers.Remove(cm);
-            }
+        if (cm.item != null) {
+            ((ArrayList)wantedCusomer[cm.item]).Remove(cm);
         }
         customerNow[cm.myPos] = null;
         Destroy(cm.gameObject);
+    }
+
+    public void dislink(Customer cm)
+    {
+        if (cm.item != null)
+        {
+            ((ArrayList)wantedCusomer[cm.item]).Remove(cm);
+        }
+    }
+
+    public bool AddNewItem()
+    {
+        if (isNewItemExisted) { return false; }
+        isNewItemExisted = true;
+        int choosedItemIndex = Random.Range(0, items.Length);
+        GameObject thisInstance = Instantiate(newItemPrefab, newItemPos);
+        thisInstance.GetComponent<NewItem>().item = items[choosedItemIndex];
+        thisInstance.transform.GetComponent<Image>().sprite = items[choosedItemIndex].itemImg;
+        return true;
+    }
+
+    public ArrayList GetAllItemCategoty()
+    {
+        ArrayList ret = new ArrayList();
+        for (int i = 0; i < itemInstanceNow.Length; i++) {
+            if (itemInstanceNow[i] != null) {
+                Item itemNow = itemInstanceNow[i].GetComponent<ItemInstance>().item;
+                if (!ret.Contains(itemNow)) {
+                    ret.Add(itemNow);
+                }
+            }
+        }
+        return ret;
+    }
+
+    public void ChooseOneType(Customer cm)
+    {
+        // find how many items we have
+        ArrayList itemsNow = GetAllItemCategoty();
+        Debug.Log(itemsNow.Count);
+        if (itemsNow.Count == 0) { return; }
+        // rand choose one item
+        int wantedItemIndex = Random.Range(0, itemsNow.Count);
+        // generate customer
+        cm.item = ((Item)itemsNow[wantedItemIndex]);
+        // create link bewteen customer and item
+        cm.transform.GetChild(0).GetComponent<Image>().sprite = ((Item)itemsNow[wantedItemIndex]).itemImg;
+        cm.transform.GetChild(0).GetComponent<Image>().color = Color.white;
+        ((ArrayList)wantedCusomer[((Item)itemsNow[wantedItemIndex])]).Add(cm);
     }
 }

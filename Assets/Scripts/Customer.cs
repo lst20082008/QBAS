@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Customer : MonoBehaviour
 {
-    public int wantedItemPos;
+    public Item item;
     public int myPos;
     public float remainTime;
     private float cdTime;
@@ -21,6 +21,8 @@ public class Customer : MonoBehaviour
         cdTime -= Time.deltaTime;
         if (cdTime < 0) {
             // rechoose
+            GameObject.FindWithTag("GameController").GetComponent<GameController>().ChooseOneType(this);
+            cdTime = 10f;
         }
         remainTime -= Time.deltaTime;
         if (remainTime <= 0) {
@@ -30,7 +32,9 @@ public class Customer : MonoBehaviour
 
     public void ClearWanted()
     {
+        transform.GetChild(0).GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
         transform.GetChild(0).GetComponent<Image>().sprite = null;
-        wantedItemPos = -1;
+        GameObject.FindWithTag("GameController").GetComponent<GameController>().dislink(this);
+        item = null;
     }
 }
