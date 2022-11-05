@@ -103,7 +103,6 @@ public class GameController : MonoBehaviour
         if (thisCount == -1) {
             return false;
         }
-        Debug.Log(thisCount);
         // find how many items we have
         int itemNum = 0;
         for (int i = 0; i < 9; i++) {

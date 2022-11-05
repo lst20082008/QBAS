@@ -11,6 +11,7 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public int posInStall;
     public float quality;
     public ArrayList wantedCustomers;
+
     private ArrayList collisions;
     private bool isDown;
     private Vector3 dist;
@@ -38,14 +39,12 @@ public class ItemInstance : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!collision.CompareTag("Customer")) { return; }
-        Debug.Log("enter" + collision);
         collisions.Add(collision);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (!collision.CompareTag("Customer")) { return; }
-        Debug.Log("exit" + collision);
         collisions.Remove(collision);
     }
 

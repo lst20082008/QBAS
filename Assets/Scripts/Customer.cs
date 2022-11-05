@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Customer : MonoBehaviour
 {
@@ -29,6 +30,7 @@ public class Customer : MonoBehaviour
 
     public void ClearWanted()
     {
+        transform.GetChild(0).GetComponent<Image>().sprite = null;
         wantedItemPos = -1;
     }
 }
